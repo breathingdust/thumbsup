@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,13 +12,21 @@ import (
 )
 
 func main() {
+	labels := getAllLabels()
+
+	for _, s := range labels {
+		fmt.Println(s)
+	}
+}
+
+func getAllLabels() []string {
+	labels := make([]string, 0)
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/labels\?page=\d+)>; rel=\"next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	url := "https://api.github.com/repos/terraform-providers/terraform-provider-aws/labels"
 	for {
-
 		resp, err := http.Get(url)
 		if err != nil {
 			log.Fatal(err)
@@ -46,7 +55,7 @@ func main() {
 				if err, ok := v.(error); ok {
 					log.Fatalln(err)
 				}
-				log.Printf("%#v\n", v)
+				labels = append(labels, fmt.Sprintf("%v", v))
 			}
 			linkHeader := resp.Header.Get("Link")
 			matches := r.FindAllStringSubmatch(linkHeader, -1)
@@ -56,4 +65,5 @@ func main() {
 			url = matches[0][1]
 		}
 	}
+	return labels
 }
