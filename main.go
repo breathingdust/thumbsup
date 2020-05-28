@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strings"
 )
 
 func main() {
@@ -25,9 +24,7 @@ func main() {
 	var results []kv
 
 	for _, s := range labels {
-		if strings.HasPrefix(s.Name, "service") {
-			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
-		}
+		results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
 	}
 
 	sort.Slice(results, func(i, j int) bool {

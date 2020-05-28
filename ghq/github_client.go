@@ -22,7 +22,6 @@ type Label struct {
 
 func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte {
 	var results [][]byte
-	//fmt.Println(url)
 
 	for {
 		req, err := http.NewRequest("GET", url, nil)
@@ -31,7 +30,6 @@ func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte 
 		}
 		req.SetBasicAuth(githubClient.Username, githubClient.Password)
 		resp, err := githubClient.Client.Do(req)
-		//fmt.Println(resp.StatusCode)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +49,6 @@ func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte 
 			}
 			url = matches[0][1]
 		}
-		//time.Sleep(1 * time.Second)
 	}
 
 	return results
@@ -92,6 +89,7 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) int {
 	count := 0
 
 	for _, a := range apiResults {
+		// why does this work, but string[] does not?
 		var s []interface{}
 		err = json.Unmarshal(a, &s)
 		if err != nil {
