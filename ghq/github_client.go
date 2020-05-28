@@ -16,9 +16,13 @@ type GithubClient struct {
 	Client   http.Client
 }
 
-func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) []json.RawMessage {
+type Label struct {
+	Name string
+}
 
-	results := []json.RawMessage{}
+func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte {
+	var results [][]byte
+	//fmt.Println(url)
 
 	for {
 		req, err := http.NewRequest("GET", url, nil)
@@ -27,25 +31,18 @@ func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) []json.Ra
 		}
 		req.SetBasicAuth(githubClient.Username, githubClient.Password)
 		resp, err := githubClient.Client.Do(req)
+		//fmt.Println(resp.StatusCode)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
-		fmt.Println(resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
-			fmt.Println("hi")
 			bodyBytes, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			jsonArray := []json.RawMessage{}
-			err = json.Unmarshal(bodyBytes, &jsonArray)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			results = append(results, jsonArray...)
+			results = append(results, bodyBytes)
 
 			linkHeader := resp.Header.Get("Link")
 			matches := r.FindAllStringSubmatch(linkHeader, -1)
@@ -53,18 +50,55 @@ func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) []json.Ra
 				break
 			}
 			url = matches[0][1]
-			fmt.Println(url)
 		}
+		//time.Sleep(1 * time.Second)
 	}
+
 	return results
 }
 
-func (githubClient *GithubClient) GetLabels() []json.RawMessage {
+func (githubClient *GithubClient) GetLabels() []Label {
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/labels\?page=\d+)>; rel=\"next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	url := "https://api.github.com/repos/terraform-providers/terraform-provider-aws/labels"
 
-	return githubClient.getAll(url, r)
+	labelApiResults := githubClient.getAll(url, r)
+
+	var results []Label
+
+	for _, s := range labelApiResults {
+		var resultSet []Label
+		err = json.Unmarshal(s, &resultSet)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		results = append(results, resultSet...)
+	}
+	return results
+}
+
+func (githubClient *GithubClient) GetIssueCountForLabel(s string) int {
+	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/issues\?labels=service%2F\w+&state=open&page=\d+)>; rel="next"`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", s)
+
+	apiResults := githubClient.getAll(url, r)
+
+	count := 0
+
+	for _, a := range apiResults {
+		var s []interface{}
+		err = json.Unmarshal(a, &s)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		count += len(s)
+	}
+	return count
 }
