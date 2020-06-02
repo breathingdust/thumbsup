@@ -19,7 +19,7 @@ func main() {
 
 	type kv struct {
 		Key   string
-		Value int
+		Value ghq.IssueResult
 	}
 	var results []kv
 
@@ -27,11 +27,13 @@ func main() {
 		results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
 	}
 
+	//results = append(results, kv{"service/amplify", githubClient.GetIssueCountForLabel("service/amplify")})
+
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Value > results[j].Value
+		return results[i].Value.Total() > results[j].Value.Total()
 	})
 
 	for _, kv := range results {
-		fmt.Printf("%s, %d\n", kv.Key, kv.Value)
+		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d \n", kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 )
 
@@ -20,11 +21,24 @@ type Label struct {
 	Name string
 }
 
-func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte {
+type Issue struct {
+	Pull_Request map[string]interface{}
+}
+
+type IssueResult struct {
+	Issues       int
+	PullRequests int
+}
+
+func (issueResult *IssueResult) Total() int {
+	return issueResult.Issues + issueResult.PullRequests
+}
+
+func (githubClient *GithubClient) getAll(githubUrl string, r *regexp.Regexp) [][]byte {
 	var results [][]byte
 
 	for {
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", githubUrl, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -47,7 +61,7 @@ func (githubClient *GithubClient) getAll(url string, r *regexp.Regexp) [][]byte 
 			if matches == nil {
 				break
 			}
-			url = matches[0][1]
+			githubUrl = matches[0][1]
 		}
 	}
 
@@ -77,26 +91,32 @@ func (githubClient *GithubClient) GetLabels() []Label {
 	return results
 }
 
-func (githubClient *GithubClient) GetIssueCountForLabel(s string) int {
+func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/issues\?labels=service%2F\w+&state=open&page=\d+)>; rel="next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", s)
+	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", url.QueryEscape(s))
 
 	apiResults := githubClient.getAll(url, r)
 
-	count := 0
+	issueResult := IssueResult{}
 
 	for _, a := range apiResults {
 		// why does this work, but string[] does not?
-		var s []interface{}
-		err = json.Unmarshal(a, &s)
+		var issues []Issue
+		err = json.Unmarshal(a, &issues)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		count += len(s)
+		for _, issue := range issues {
+			if issue.Pull_Request == nil {
+				issueResult.PullRequests++
+			} else {
+				issueResult.Issues++
+			}
+		}
 	}
-	return count
+	return issueResult
 }
