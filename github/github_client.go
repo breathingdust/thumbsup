@@ -1,4 +1,4 @@
-package ghq
+package github
 
 import (
 	"encoding/json"

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"breathingdust/ghq/ghq"
 	"flag"
 	"fmt"
 	"net/http"
 	"sort"
 	"strings"
+	"tf-aws-prov-gh-queries/github"
 )
 
 func main() {
@@ -14,13 +14,13 @@ func main() {
 	passwordPtr := flag.String("password", "", "GitHub Personal Access Token or OAuth Token")
 	flag.Parse()
 
-	githubClient := ghq.GithubClient{Username: *usernamePtr, Password: *passwordPtr, Client: http.Client{}}
+	githubClient := github.GithubClient{Username: *usernamePtr, Password: *passwordPtr, Client: http.Client{}}
 
 	labels := githubClient.GetLabels()
 
 	type kv struct {
 		Key   string
-		Value ghq.IssueResult
+		Value github.IssueResult
 	}
 	var results []kv
 
