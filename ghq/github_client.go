@@ -22,12 +22,20 @@ type Label struct {
 }
 
 type Issue struct {
-	Pull_Request map[string]interface{}
+	PullRequest map[string]interface{} `json:"pull_request"`
+	Reactions   Reactions
 }
 
 type IssueResult struct {
 	Issues       int
 	PullRequests int
+	Reactions    int
+}
+
+type Reactions struct {
+	PlusOne    int `json:"+1"`
+	MinusOne   int `json:"-1"`
+	TotalCount int `json:"total_count"`
 }
 
 func (issueResult *IssueResult) Total() int {
@@ -43,6 +51,7 @@ func (githubClient *GithubClient) getAll(githubUrl string, r *regexp.Regexp) [][
 			log.Fatal(err)
 		}
 		req.SetBasicAuth(githubClient.Username, githubClient.Password)
+		req.Header.Add("Accept", "application/vnd.github.squirrel-girl-preview")
 		resp, err := githubClient.Client.Do(req)
 		if err != nil {
 			log.Fatal(err)
@@ -111,11 +120,12 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 		}
 
 		for _, issue := range issues {
-			if issue.Pull_Request == nil {
+			if issue.PullRequest == nil {
 				issueResult.PullRequests++
 			} else {
 				issueResult.Issues++
 			}
+			issueResult.Reactions += issue.Reactions.TotalCount
 		}
 	}
 	return issueResult

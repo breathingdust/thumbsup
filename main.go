@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 )
 
 func main() {
@@ -24,7 +25,9 @@ func main() {
 	var results []kv
 
 	for _, s := range labels {
-		results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
+		if strings.HasPrefix(s.Name, "service/") {
+			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
+		}
 	}
 
 	//results = append(results, kv{"service/amplify", githubClient.GetIssueCountForLabel("service/amplify")})
@@ -34,6 +37,6 @@ func main() {
 	})
 
 	for _, kv := range results {
-		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d \n", kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests)
+		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d, Reactions: %d \n", kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests, kv.Value.Reactions)
 	}
 }
