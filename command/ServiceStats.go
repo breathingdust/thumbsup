@@ -18,6 +18,13 @@ func (c *ServiceStatsCommand) Help() string {
 }
 
 func (c *ServiceStatsCommand) Run(args []string) int {
+	sortBy := ""
+	if len(args) > 0 {
+		sortBy = args[0]
+	}
+
+	sortBy = strings.ToLower(sortBy)
+
 	githubClient := github.GithubClient{Username: c.Username, Password: c.Password, Client: http.Client{}}
 
 	labels := githubClient.GetLabels()
@@ -34,10 +41,25 @@ func (c *ServiceStatsCommand) Run(args []string) int {
 		}
 	}
 
-	//results = append(results, kv{"service/amplify", githubClient.GetIssueCountForLabel("service/amplify")})
-
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Value.Rocket > results[j].Value.Rocket
+		switch sortBy {
+		case "+1":
+			return results[i].Value.PlusOne > results[j].Value.PlusOne
+		case "-1":
+			return results[i].Value.MinusOne > results[j].Value.MinusOne
+		case "laugh":
+			return results[i].Value.Laugh > results[j].Value.Laugh
+		case "hooray":
+			return results[i].Value.Hooray > results[j].Value.Hooray
+		case "eyes":
+			return results[i].Value.Eyes > results[j].Value.Eyes
+		case "confused":
+			return results[i].Value.Confused > results[j].Value.Confused
+		case "rocket":
+			return results[i].Value.Rocket > results[j].Value.Rocket
+		default:
+			return results[i].Value.Reactions > results[j].Value.Reactions
+		}
 	})
 
 	for _, kv := range results {

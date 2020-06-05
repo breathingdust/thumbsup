@@ -22,6 +22,12 @@ func main() {
 				Password: password,
 			}, nil
 		},
+		"core-service-stats": func() (cli.Command, error) {
+			return &command.CoreServiceReactionsCommand{
+				Username: username,
+				Password: password,
+			}, nil
+		},
 	}
 	exitStatus, err := c.Run()
 	if err != nil {

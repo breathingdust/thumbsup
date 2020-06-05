@@ -24,6 +24,9 @@ type Label struct {
 type Issue struct {
 	PullRequest map[string]interface{} `json:"pull_request"`
 	Reactions   Reactions
+	Title       string
+	Url         string
+	Service     string
 }
 
 type IssueResult struct {
@@ -150,4 +153,31 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 		}
 	}
 	return issueResult
+}
+
+func (githubClient *GithubClient) GetIssuesForLabel(s string) []Issue {
+	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/issues\?labels=service%2F\w+&state=open&page=\d+)>; rel="next"`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", url.QueryEscape(s))
+
+	apiResults := githubClient.getAll(url, r)
+
+	var results []Issue
+
+	for _, a := range apiResults {
+		var issues []Issue
+		err = json.Unmarshal(a, &issues)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, i := range issues {
+			i.Service = s
+		}
+
+		results = append(results, issues...)
+	}
+	return results
 }
