@@ -30,12 +30,26 @@ type IssueResult struct {
 	Issues       int
 	PullRequests int
 	Reactions    int
+	PlusOne      int
+	MinusOne     int
+	Laugh        int
+	Confused     int
+	Heart        int
+	Hooray       int
+	Rocket       int
+	Eyes         int
 }
 
 type Reactions struct {
 	PlusOne    int `json:"+1"`
 	MinusOne   int `json:"-1"`
 	TotalCount int `json:"total_count"`
+	Laugh      int
+	Confused   int
+	Heart      int
+	Hooray     int
+	Rocket     int
+	Eyes       int
 }
 
 func (issueResult *IssueResult) Total() int {
@@ -112,7 +126,6 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 	issueResult := IssueResult{}
 
 	for _, a := range apiResults {
-		// why does this work, but string[] does not?
 		var issues []Issue
 		err = json.Unmarshal(a, &issues)
 		if err != nil {
@@ -126,6 +139,14 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 				issueResult.Issues++
 			}
 			issueResult.Reactions += issue.Reactions.TotalCount
+			issueResult.PlusOne += issue.Reactions.PlusOne
+			issueResult.MinusOne += issue.Reactions.MinusOne
+			issueResult.Laugh += issue.Reactions.Laugh
+			issueResult.Confused += issue.Reactions.Confused
+			issueResult.Heart += issue.Reactions.Heart
+			issueResult.Rocket += issue.Reactions.Rocket
+			issueResult.Eyes += issue.Reactions.Eyes
+			issueResult.Hooray += issue.Reactions.Hooray
 		}
 	}
 	return issueResult

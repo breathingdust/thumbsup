@@ -33,10 +33,11 @@ func main() {
 	//results = append(results, kv{"service/amplify", githubClient.GetIssueCountForLabel("service/amplify")})
 
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Value.Total() > results[j].Value.Total()
+		return results[i].Value.Rocket > results[j].Value.Rocket
 	})
 
 	for _, kv := range results {
-		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d, Reactions: %d \n", kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests, kv.Value.Reactions)
+		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d, Reactions: %d, +1: %d, -1: %d, Hooray: %d, Heart: %d, Rocket: %d, Eyes: %d, Confused: %d \n",
+			kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests, kv.Value.Reactions, kv.Value.PlusOne, kv.Value.MinusOne, kv.Value.Hooray, kv.Value.Heart, kv.Value.Rocket, kv.Value.Eyes, kv.Value.Confused)
 	}
 }
