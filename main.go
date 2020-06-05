@@ -1,43 +1,33 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"net/http"
-	"sort"
-	"strings"
-	"tf-aws-prov-gh-queries/github"
+	"log"
+	"os"
+
+	"tf-aws-prov-gh-queries/command"
+
+	"github.com/mitchellh/cli"
 )
 
 func main() {
-	usernamePtr := flag.String("username", "", "GitHub Username")
-	passwordPtr := flag.String("password", "", "GitHub Personal Access Token or OAuth Token")
-	flag.Parse()
+	username := os.Getenv("GITHUB_USER")
+	password := os.Getenv("GITHUB_TOKEN")
 
-	githubClient := github.GithubClient{Username: *usernamePtr, Password: *passwordPtr, Client: http.Client{}}
-
-	labels := githubClient.GetLabels()
-
-	type kv struct {
-		Key   string
-		Value github.IssueResult
+	c := cli.NewCLI("ghq", "1.0.0")
+	c.Args = os.Args[1:]
+	c.Commands = map[string]cli.CommandFactory{
+		"service-stats": func() (cli.Command, error) {
+			return &command.ServiceStatsCommand{
+				Username: username,
+				Password: password,
+			}, nil
+		},
 	}
-	var results []kv
-
-	for _, s := range labels {
-		if strings.HasPrefix(s.Name, "service/") {
-			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
-		}
+	exitStatus, err := c.Run()
+	if err != nil {
+		log.Println(err)
 	}
 
-	//results = append(results, kv{"service/amplify", githubClient.GetIssueCountForLabel("service/amplify")})
+	os.Exit(exitStatus)
 
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Value.Rocket > results[j].Value.Rocket
-	})
-
-	for _, kv := range results {
-		fmt.Printf("Service: %s, Total: %d, Issues: %d, Pull Requests: %d, Reactions: %d, +1: %d, -1: %d, Hooray: %d, Heart: %d, Rocket: %d, Eyes: %d, Confused: %d \n",
-			kv.Key, kv.Value.Total(), kv.Value.Issues, kv.Value.PullRequests, kv.Value.Reactions, kv.Value.PlusOne, kv.Value.MinusOne, kv.Value.Hooray, kv.Value.Heart, kv.Value.Rocket, kv.Value.Eyes, kv.Value.Confused)
-	}
 }
