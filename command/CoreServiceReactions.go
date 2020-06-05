@@ -59,8 +59,8 @@ func (c *CoreServiceReactionsCommand) Run(args []string) int {
 
 	for i := 0; i < 20; i++ {
 		issue := results[i]
-		fmt.Printf("Title: %s, Reactions: %d, +1: %d, -1: %d, Hooray: %d, Heart: %d, Rocket: %d, Eyes: %d, Confused: %d \n",
-			issue.Title, issue.Reactions.TotalCount, issue.Reactions.PlusOne, issue.Reactions.MinusOne, issue.Reactions.Hooray, issue.Reactions.Heart, issue.Reactions.Rocket, issue.Reactions.Eyes, issue.Reactions.Confused)
+		fmt.Printf("Title: %s, Url: %s, Reactions: %d, +1: %d, -1: %d, Hooray: %d, Heart: %d, Rocket: %d, Eyes: %d, Confused: %d \n",
+			issue.Title, issue.Url, issue.Reactions.TotalCount, issue.Reactions.PlusOne, issue.Reactions.MinusOne, issue.Reactions.Hooray, issue.Reactions.Heart, issue.Reactions.Rocket, issue.Reactions.Eyes, issue.Reactions.Confused)
 	}
 	return 0
 }

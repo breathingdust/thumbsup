@@ -13,7 +13,7 @@ func main() {
 	username := os.Getenv("GITHUB_USER")
 	password := os.Getenv("GITHUB_TOKEN")
 
-	c := cli.NewCLI("ghq", "1.0.0")
+	c := cli.NewCLI("tf-aws-ghq", "1.0.0")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"service-stats": func() (cli.Command, error) {
