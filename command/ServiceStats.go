@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"tf-aws-prov-gh-queries/github"
+
+	"github.com/breathingdust/tf-aws-ghq/github"
 )
 
 type ServiceStatsCommand struct {
@@ -70,5 +71,5 @@ func (c *ServiceStatsCommand) Run(args []string) int {
 }
 
 func (c *ServiceStatsCommand) Synopsis() string {
-	return "synopsis"
+	return "Lists statistics by AWS service tag."
 }

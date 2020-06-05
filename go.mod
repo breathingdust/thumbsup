@@ -1,4 +1,4 @@
-module tf-aws-prov-gh-queries
+module github.com/breathingdust/tf-aws-ghq
 
 go 1.13
 

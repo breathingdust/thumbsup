@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"tf-aws-prov-gh-queries/command"
+	"github.com/breathingdust/tf-aws-ghq/command"
 
 	"github.com/mitchellh/cli"
 )
@@ -22,7 +22,7 @@ func main() {
 				Password: password,
 			}, nil
 		},
-		"core-service-stats": func() (cli.Command, error) {
+		"top-core-issues": func() (cli.Command, error) {
 			return &command.CoreServiceReactionsCommand{
 				Username: username,
 				Password: password,
@@ -35,5 +35,4 @@ func main() {
 	}
 
 	os.Exit(exitStatus)
-
 }

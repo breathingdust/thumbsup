@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"tf-aws-prov-gh-queries/github"
+
+	"github.com/breathingdust/tf-aws-ghq/github"
 )
 
 type CoreServiceReactionsCommand struct {
@@ -65,5 +66,5 @@ func (c *CoreServiceReactionsCommand) Run(args []string) int {
 }
 
 func (c *CoreServiceReactionsCommand) Synopsis() string {
-	return "synopsis"
+	return "Lists the top 20 issues by reaction type belonging to core services as definied in the provider documentation. Default is total reaction count."
 }
