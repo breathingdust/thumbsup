@@ -21,28 +21,30 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 
 	client := githubv4.NewClient(httpClient)
 
+	type issue struct {
+		Url       string
+		Reactions struct {
+			TotalCount int
+		} `graphql:"reactions(first: 1)"`
+		TimelineItems struct {
+			Nodes []struct {
+				CrossReferencedEvent struct {
+					Source struct {
+						Issue struct {
+							Reactions struct {
+								TotalCount int
+							} `graphql:"reactions(first: 1)"`
+						} `graphql:"... on Issue"`
+					}
+				} `graphql:"... on CrossReferencedEvent"`
+			}
+		} `graphql:"timelineItems(first: 100, itemTypes:[CONNECTED_EVENT, CROSS_REFERENCED_EVENT])"`
+	}
+
 	var query struct {
 		Repository struct {
 			Issues struct {
-				Nodes []struct {
-					Url       string
-					Reactions struct {
-						TotalCount int
-					} `graphql:"reactions(first: 1)"`
-					TimelineItems struct {
-						Nodes []struct {
-							CrossReferencedEvent struct {
-								Source struct {
-									Issue struct {
-										Reactions struct {
-											TotalCount int
-										} `graphql:"reactions(first: 1)"`
-									} `graphql:"... on Issue"`
-								}
-							} `graphql:"... on CrossReferencedEvent"`
-						}
-					} `graphql:"timelineItems(first: 100, itemTypes:[CONNECTED_EVENT, CROSS_REFERENCED_EVENT])"`
-				}
+				Nodes    []issue
 				PageInfo struct {
 					EndCursor   githubv4.String
 					HasNextPage bool
@@ -51,14 +53,26 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
 	}
 
-	err := client.Query(context.Background(), &query, nil)
-	if err != nil {
-		log.Fatal(err)
+	variables := map[string]interface{}{
+		"issuesCursor": (*githubv4.String)(nil), // Null after argument to get first page.
+	}
+
+	var allIssues []issue
+	for {
+		err := client.Query(context.Background(), &query, variables)
+		if err != nil {
+			log.Fatal(err)
+		}
+		allIssues = append(allIssues, query.Repository.Issues.Nodes...)
+		if !query.Repository.Issues.PageInfo.HasNextPage {
+			break
+		}
+		variables["issuesCursor"] = githubv4.NewString(query.Repository.Issues.PageInfo.EndCursor)
 	}
 
 	results := make(map[string]int)
 
-	for _, n := range query.Repository.Issues.Nodes {
+	for _, n := range allIssues {
 		reactionCount := n.Reactions.TotalCount
 		for _, t := range n.TimelineItems.Nodes {
 			reactionCount += t.CrossReferencedEvent.Source.Issue.Reactions.TotalCount
