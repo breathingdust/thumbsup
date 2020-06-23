@@ -28,6 +28,9 @@ func main() {
 				Password: password,
 			}, nil
 		},
+		"aggregated-issue-reactions": func() (cli.Command, error) {
+			return &command.AggregatedIssueReactionsCommand{}, nil
+		},
 	}
 	exitStatus, err := c.Run()
 	if err != nil {
