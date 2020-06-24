@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -21,7 +20,6 @@ type GraphQLClient struct {
 }
 
 func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIssueReactionResult {
-	fmt.Println(os.Getenv("GITHUB_TOKEN"))
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
@@ -72,13 +70,11 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(query.Repository.Issues.Nodes[0].Url)
 		allIssues = append(allIssues, query.Repository.Issues.Nodes...)
 		if !query.Repository.Issues.PageInfo.HasNextPage {
 			break
 		}
 		variables["issuesCursor"] = githubv4.NewString(query.Repository.Issues.PageInfo.EndCursor)
-		fmt.Println("Cursor Loop")
 	}
 
 	var results []AggregatedIssueReactionResult
