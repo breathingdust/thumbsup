@@ -19,7 +19,7 @@ func (c *AggregatedIssueReactionsCommand) Run(args []string) int {
 	results := client.GetAggregatedIssueReactions()
 
 	for _, r := range results {
-		fmt.Printf("%s,%s,%d", r.Title, r.Url, r.Reactions)
+		fmt.Printf("%s,%s,%d\n", r.Title, r.Url, r.Reactions)
 	}
 	return 0
 }
