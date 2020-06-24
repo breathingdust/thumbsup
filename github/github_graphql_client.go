@@ -5,15 +5,23 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
+type AggregatedIssueReactionResult struct {
+	Title     string
+	Url       string
+	Reactions int
+}
+
 type GraphQLClient struct {
 }
 
-func (graphQLClient *GraphQLClient) Stuff() string {
+func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIssueReactionResult {
+	fmt.Println(os.Getenv("GITHUB_TOKEN"))
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
@@ -23,6 +31,7 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 
 	type issue struct {
 		Url       string
+		Title     string
 		Reactions struct {
 			TotalCount int
 		} `graphql:"reactions(first: 1)"`
@@ -38,7 +47,7 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 					}
 				} `graphql:"... on CrossReferencedEvent"`
 			}
-		} `graphql:"timelineItems(first: 100, itemTypes:[CONNECTED_EVENT, CROSS_REFERENCED_EVENT])"`
+		} `graphql:"timelineItems(first: 100, itemTypes:[CROSS_REFERENCED_EVENT])"`
 	}
 
 	var query struct {
@@ -49,7 +58,7 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 					EndCursor   githubv4.String
 					HasNextPage bool
 				}
-			} `graphql:"issues(states: [OPEN], first:10)"`
+			} `graphql:"issues(states: [OPEN], first:100, after: $issuesCursor)"`
 		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
 	}
 
@@ -63,26 +72,32 @@ func (graphQLClient *GraphQLClient) Stuff() string {
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(query.Repository.Issues.Nodes[0].Url)
 		allIssues = append(allIssues, query.Repository.Issues.Nodes...)
 		if !query.Repository.Issues.PageInfo.HasNextPage {
 			break
 		}
 		variables["issuesCursor"] = githubv4.NewString(query.Repository.Issues.PageInfo.EndCursor)
+		fmt.Println("Cursor Loop")
 	}
 
-	results := make(map[string]int)
+	var results []AggregatedIssueReactionResult
 
 	for _, n := range allIssues {
 		reactionCount := n.Reactions.TotalCount
 		for _, t := range n.TimelineItems.Nodes {
 			reactionCount += t.CrossReferencedEvent.Source.Issue.Reactions.TotalCount
 		}
-		results[n.Url] = reactionCount
+		results = append(results, AggregatedIssueReactionResult{
+			Url:       n.Url,
+			Title:     n.Title,
+			Reactions: reactionCount,
+		})
 	}
 
-	for key, value := range results {
-		fmt.Printf("%s %v\n", key, value)
-	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Reactions > results[j].Reactions
+	})
 
-	return ""
+	return results
 }
