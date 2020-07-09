@@ -38,6 +38,7 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 				CrossReferencedEvent struct {
 					Source struct {
 						Issue struct {
+							State     string
 							Reactions struct {
 								TotalCount int
 							} `graphql:"reactions(first: 1)"`
@@ -82,7 +83,9 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 	for _, n := range allIssues {
 		reactionCount := n.Reactions.TotalCount
 		for _, t := range n.TimelineItems.Nodes {
-			reactionCount += t.CrossReferencedEvent.Source.Issue.Reactions.TotalCount
+			if t.CrossReferencedEvent.Source.Issue.State == "OPEN" {
+				reactionCount += t.CrossReferencedEvent.Source.Issue.Reactions.TotalCount
+			}
 		}
 		results = append(results, AggregatedIssueReactionResult{
 			Url:       n.Url,
