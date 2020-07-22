@@ -19,6 +19,56 @@ type AggregatedIssueReactionResult struct {
 type GraphQLClient struct {
 }
 
+// func (GraphQLClient *GraphQLClient) GetOpenPullRequests() {}interface {
+// 	src := oauth2.StaticTokenSource(
+// 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+// 	)
+// 	httpClient := oauth2.NewClient(context.Background(), src)
+
+// 	client := githubv4.NewClient(httpClient)
+
+// 	type pullRequest struct {
+// 		Files struct {
+// 			Nodes []struct {
+// 				Path string
+// 				PageInfo struct {
+// 					EndCursor   githubv4.String
+// 					HasNextPage bool
+// 				}
+// 			}
+// 		} `graphql:"files(first: 100)"`
+// 	}
+
+// 	var query struct {
+// 		Repository struct {
+// 			PullRequests struct {
+// 				Nodes    []pullRequest
+// 				PageInfo struct {
+// 					EndCursor   githubv4.String
+// 					HasNextPage bool
+// 				}
+// 			} `graphql:"pullRequests(states: [OPEN], first:100, after: $pullRequestsCursor)"`
+// 		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
+// 	}
+
+// 	variables := map[string]interface{}{
+// 		"pullRequestsCursor": (*githubv4.String)(nil), // Null after argument to get first page.
+// 	}
+
+// 	var allPullRequests []pullRequest
+// 	for {
+// 		err := client.Query(context.Background(), &query, variables)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		allIssues = append(allPullRequests, query.Repository.PullRequests.Nodes...)
+// 		if !query.Repository.PullRequests.PageInfo.HasNextPage {
+// 			break
+// 		}
+// 		variables["pullRequestsCursor"] = githubv4.NewString(query.Repository.Issues.PageInfo.EndCursor)
+// 	}
+// }
+
 func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIssueReactionResult {
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},

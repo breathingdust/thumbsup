@@ -3,6 +3,7 @@ module github.com/breathingdust/tf-aws-ghq
 go 1.13
 
 require (
+	github.com/google/go-github/v32 v32.1.0
 	github.com/itchyny/gojq v0.10.1 // indirect
 	github.com/mitchellh/cli v1.1.1
 	github.com/shurcooL/githubv4 v0.0.0-20200414012201-bbc966b061dd
