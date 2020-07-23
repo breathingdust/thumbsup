@@ -31,9 +31,6 @@ func main() {
 		"aggregated-issue-reactions": func() (cli.Command, error) {
 			return &command.AggregatedIssueReactionsCommand{}, nil
 		},
-		"duplicate-pull-requests": func() (cli.Command, error) {
-			return &command.DuplicatePullRequestsCommand{}, nil
-		},
 		"search-for-duplicates": func() (cli.Command, error) {
 			return &command.SearchForDuplicatePullRequestsCommand{}, nil
 		},

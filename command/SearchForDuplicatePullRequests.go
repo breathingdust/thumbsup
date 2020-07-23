@@ -4,7 +4,9 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/breathingdust/tf-aws-ghq/cache"
 	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/juliangruber/go-intersect"
 )
 
 type SearchForDuplicatePullRequestsCommand struct {
@@ -17,14 +19,50 @@ func (c *SearchForDuplicatePullRequestsCommand) Help() string {
 func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 	client := github.GoGithubClient{}
 
-	i, _ := strconv.Atoi(args[0])
+	number, _ := strconv.Atoi(args[0])
 
-	results := client.SearchPotentialDuplicates(i)
+	fileCache := cache.SimpleFileCache{}
 
-	log.Printf("%d potential duplicates found for ''\n", len(results.PotentialDuplicates), results.PullRequest.GetTitle())
+	var allPullRequests []github.PullRequestFiles
 
-	for _, d := range results.PotentialDuplicates {
-		log.Printf("s% : %s", d.GetTitle(), d.GetURL())
+	fileCache.Read("allPullRequests", &allPullRequests)
+
+	if allPullRequests == nil {
+		log.Print("No cache hit, loading from github ")
+		allPullRequests = client.GetPullRequestsAndFiles(number)
+		fileCache.Write("allPullRequests", allPullRequests)
+	} else {
+		log.Print("Using cache ")
+	}
+	log.Printf("%d Pull Requests\n", len(allPullRequests))
+
+	var pullRequest github.PullRequestFiles
+
+	for _, r := range allPullRequests {
+		if r.PullRequest.GetNumber() == number {
+			pullRequest = r
+			break
+		}
+	}
+
+	log.Printf("Searching for duplicates of Pull Request '%s' : '%s'\n", pullRequest.PullRequest.GetTitle(), pullRequest.PullRequest.GetURL())
+
+	for _, s := range allPullRequests {
+		if pullRequest.PullRequest.ID != s.PullRequest.ID {
+			//log.Printf("Comparing: %s with %d files and %s with %d files", pullRequest.PullRequest.GetTitle(), len(pullRequest.Files), s.PullRequest.GetTitle(), len(s.Files))
+			intersectionResult := intersect.Simple(pullRequest.Files, s.Files)
+			//log.Printf("%d %d", len(pullRequest.Files), len(intersectionResult.([]interface{})))
+
+			if len(pullRequest.Files) == len(intersectionResult.([]interface{})) {
+				pullRequest.PotentialDuplicates = append(pullRequest.PotentialDuplicates, s.PullRequest)
+			}
+		}
+	}
+
+	log.Printf("%d potential duplicates found\n", len(pullRequest.PotentialDuplicates))
+
+	for _, d := range pullRequest.PotentialDuplicates {
+		log.Printf("%s : %s", d.GetTitle(), d.GetHTMLURL())
 	}
 
 	//json, _ := json.MarshalIndent(results, "", " ")
