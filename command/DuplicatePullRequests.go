@@ -1,7 +1,9 @@
 package command
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
+	"log"
 
 	"github.com/breathingdust/tf-aws-ghq/github"
 )
@@ -18,9 +20,10 @@ func (c *DuplicatePullRequestsCommand) Run(args []string) int {
 
 	results := client.GetPullRequestFiles()
 
-	for _, f := range results[0].PotentialDuplicates {
-		fmt.Printf("%s", f)
-	}
+	log.Printf("%d pull requests with potential duplicates found.", len(results))
+
+	json, _ := json.MarshalIndent(results, "", " ")
+	_ = ioutil.WriteFile("duplicates.json", json, 0644)
 
 	return 0
 }

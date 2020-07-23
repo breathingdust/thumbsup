@@ -34,6 +34,9 @@ func main() {
 		"duplicate-pull-requests": func() (cli.Command, error) {
 			return &command.DuplicatePullRequestsCommand{}, nil
 		},
+		"search-for-duplicates": func() (cli.Command, error) {
+			return &command.SearchForDuplicatePullRequestsCommand{}, nil
+		},
 	}
 	exitStatus, err := c.Run()
 	if err != nil {
