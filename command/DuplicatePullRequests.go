@@ -18,9 +18,10 @@ func (c *DuplicatePullRequestsCommand) Run(args []string) int {
 
 	results := client.GetPullRequestFiles()
 
-	for _, r := range results {
-		fmt.Printf("%s\n", r.Title)
+	for _, f := range results[0].PotentialDuplicates {
+		fmt.Printf("%s", f)
 	}
+
 	return 0
 }
 
