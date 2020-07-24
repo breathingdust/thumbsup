@@ -20,28 +20,36 @@ type PullRequestFiles struct {
 }
 
 // GoGithubClient : Repository for Github
-type GoGithubClient struct {
+type goGithubClient struct {
+	Client github.Client
 }
 
-// GetPullRequestsAndFiles : Gets all Open PRs for the provider, gets the changed files information for each and returns an array of PullRequestFiles
-func (GoGithubClient *GoGithubClient) GetPullRequestsAndFiles(number int) []PullRequestFiles {
-	ctx := context.Background()
+func NewGoGithubClient(ctx context.Context) *goGithubClient {
+	c := new(goGithubClient)
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
-	client := github.NewClient(tc)
+	c.Client = *github.NewClient(tc)
+
+	return c
+}
+
+// GetPullRequestsAndFiles : Gets all Open PRs for the provider, gets the changed files information for each and returns an array of PullRequestFiles
+func (goGithubClient *goGithubClient) GetPullRequestsAndFiles(ctx context.Context, number int) []PullRequestFiles {
 
 	pullRequestListOptions := &github.PullRequestListOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	s.Color("green")
+	s.Prefix = "Loading Open Pull Requests and changed files: "
 	s.Start()
 	var allPullRequests []*github.PullRequest
 	for {
-		pullRequests, resp, err := client.PullRequests.List(ctx, "terraform-providers", "terraform-provider-aws", pullRequestListOptions)
+		pullRequests, resp, err := goGithubClient.Client.PullRequests.List(ctx, "terraform-providers", "terraform-provider-aws", pullRequestListOptions)
 
 		if err != nil {
 			log.Fatal(err)
@@ -53,8 +61,6 @@ func (GoGithubClient *GoGithubClient) GetPullRequestsAndFiles(number int) []Pull
 		pullRequestListOptions.Page = resp.NextPage
 	}
 
-	log.Println(len(allPullRequests))
-
 	getFilesListOptions := &github.ListOptions{PerPage: 100}
 
 	var pullRequestFiles []PullRequestFiles
@@ -65,7 +71,7 @@ func (GoGithubClient *GoGithubClient) GetPullRequestsAndFiles(number int) []Pull
 			pullRequest := PullRequestFiles{}
 			pullRequest.PullRequest = *r
 			for {
-				files, resp, err := client.PullRequests.ListFiles(ctx, "terraform-providers", "terraform-provider-aws", r.GetNumber(), getFilesListOptions)
+				files, resp, err := goGithubClient.Client.PullRequests.ListFiles(ctx, "terraform-providers", "terraform-provider-aws", r.GetNumber(), getFilesListOptions)
 				if err != nil || len(files) == 0 {
 					log.Fatal(err)
 				}

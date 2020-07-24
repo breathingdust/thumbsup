@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"log"
 	"strconv"
 
@@ -9,15 +10,18 @@ import (
 	"github.com/juliangruber/go-intersect"
 )
 
+// SearchForDuplicatePullRequestsCommand :
 type SearchForDuplicatePullRequestsCommand struct {
 }
 
+// Help : Required by mitchellh/cli package, returns help text.
 func (c *SearchForDuplicatePullRequestsCommand) Help() string {
 	return "help"
 }
 
 func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
-	client := github.GoGithubClient{}
+	ctx := context.Background()
+	client := github.NewGoGithubClient(ctx)
 
 	number, _ := strconv.Atoi(args[0])
 
@@ -28,13 +32,11 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 	fileCache.Read("allPullRequests", &allPullRequests)
 
 	if allPullRequests == nil {
-		log.Print("No cache hit, loading from GitHub. This may take a minute... ")
-		allPullRequests = client.GetPullRequestsAndFiles(number)
+		allPullRequests = client.GetPullRequestsAndFiles(ctx, number)
 		fileCache.Write("allPullRequests", allPullRequests)
 	} else {
-		log.Print("Using cache ")
+		log.Print("Using cached Pull Requests")
 	}
-	log.Printf("%d Pull Requests\n", len(allPullRequests))
 
 	var pullRequest github.PullRequestFiles
 
@@ -49,7 +51,7 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 		log.Fatalf("Pull request %d not found", number)
 	}
 
-	log.Printf("Searching for duplicates of Pull Request '%s' : '%s'\n", pullRequest.PullRequest.GetTitle(), pullRequest.PullRequest.GetURL())
+	log.Printf("Searching %d Pull Requests for duplicates of '%s' : '%s'\n", len(allPullRequests), pullRequest.PullRequest.GetTitle(), pullRequest.PullRequest.GetURL())
 
 	for _, s := range allPullRequests {
 		if pullRequest.PullRequest.ID != s.PullRequest.ID {
@@ -75,12 +77,10 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 		log.Printf("%s : %s", d.GetTitle(), d.GetHTMLURL())
 	}
 
-	//json, _ := json.MarshalIndent(results, "", " ")
-	//_ = ioutil.WriteFile("duplicates_for_pr.json", json, 0644)
-
 	return 0
 }
 
+// Synopsis : Required by mitchellh/cli package, returns synopsis.
 func (c *SearchForDuplicatePullRequestsCommand) Synopsis() string {
 	return "Outputs all issues sorted by referenced aggregated reactions. Does not include comment reactions."
 }
