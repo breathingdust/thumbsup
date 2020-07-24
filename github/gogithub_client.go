@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
+
+	"github.com/briandowns/spinner"
 
 	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
@@ -34,6 +37,8 @@ func (GoGithubClient *GoGithubClient) GetPullRequestsAndFiles(number int) []Pull
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
+	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	s.Start()
 	var allPullRequests []*github.PullRequest
 	for {
 		pullRequests, resp, err := client.PullRequests.List(ctx, "terraform-providers", "terraform-provider-aws", pullRequestListOptions)
@@ -77,6 +82,7 @@ func (GoGithubClient *GoGithubClient) GetPullRequestsAndFiles(number int) []Pull
 			pullRequestFiles = append(pullRequestFiles, pullRequest)
 		}
 	}
+	s.Stop()
 
 	log.Printf("Number of Pull Requests to compare: %d", len(allPullRequests))
 

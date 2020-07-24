@@ -28,7 +28,7 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 	fileCache.Read("allPullRequests", &allPullRequests)
 
 	if allPullRequests == nil {
-		log.Print("No cache hit, loading from github ")
+		log.Print("No cache hit, loading from GitHub. This may take a minute... ")
 		allPullRequests = client.GetPullRequestsAndFiles(number)
 		fileCache.Write("allPullRequests", allPullRequests)
 	} else {
@@ -45,6 +45,10 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 		}
 	}
 
+	if pullRequest.PullRequest.GetTitle() == "" {
+		log.Fatalf("Pull request %d not found", number)
+	}
+
 	log.Printf("Searching for duplicates of Pull Request '%s' : '%s'\n", pullRequest.PullRequest.GetTitle(), pullRequest.PullRequest.GetURL())
 
 	for _, s := range allPullRequests {
@@ -53,8 +57,14 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 			intersectionResult := intersect.Simple(pullRequest.Files, s.Files)
 			//log.Printf("%d %d", len(pullRequest.Files), len(intersectionResult.([]interface{})))
 
-			if len(pullRequest.Files) == len(intersectionResult.([]interface{})) {
-				pullRequest.PotentialDuplicates = append(pullRequest.PotentialDuplicates, s.PullRequest)
+			if len(pullRequest.Files) > len(s.Files) {
+				if len(pullRequest.Files) == len(intersectionResult.([]interface{})) {
+					pullRequest.PotentialDuplicates = append(pullRequest.PotentialDuplicates, s.PullRequest)
+				}
+			} else {
+				if len(s.Files) == len(intersectionResult.([]interface{})) {
+					pullRequest.PotentialDuplicates = append(pullRequest.PotentialDuplicates, s.PullRequest)
+				}
 			}
 		}
 	}

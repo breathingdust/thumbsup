@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/briandowns/spinner v1.11.1
 	github.com/google/go-github/v32 v32.1.0
 	github.com/itchyny/gojq v0.10.1 // indirect
 	github.com/juliangruber/go-intersect v1.0.0
