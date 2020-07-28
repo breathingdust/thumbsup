@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/breathingdust/tf-aws-ghq/repositories"
 )
 
 type AggregatedIssueReactionsCommand struct {
@@ -14,7 +14,7 @@ func (c *AggregatedIssueReactionsCommand) Help() string {
 }
 
 func (c *AggregatedIssueReactionsCommand) Run(args []string) int {
-	client := github.GraphQLClient{}
+	client := repositories.GraphQLClient{}
 
 	results := client.GetAggregatedIssueReactions()
 

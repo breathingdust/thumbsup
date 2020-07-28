@@ -1,4 +1,4 @@
-package github
+package repositories
 
 import (
 	"context"
@@ -19,6 +19,24 @@ type PullRequestFiles struct {
 	PotentialDuplicates []github.PullRequest
 }
 
+type IssueResult struct {
+	Issues       int
+	PullRequests int
+	Reactions    int
+	PlusOne      int
+	MinusOne     int
+	Laugh        int
+	Confused     int
+	Heart        int
+	Hooray       int
+	Rocket       int
+	Eyes         int
+}
+
+func (issueResult *IssueResult) Total() int {
+	return issueResult.Issues + issueResult.PullRequests
+}
+
 // GoGithubClient : Repository for Github
 type goGithubClient struct {
 	Client github.Client
@@ -34,6 +52,63 @@ func NewGoGithubClient(ctx context.Context) *goGithubClient {
 	c.Client = *github.NewClient(tc)
 
 	return c
+}
+
+func (goGithubClient *goGithubClient) GetLabels(ctx context.Context) []*github.Label {
+	labels, _, err := goGithubClient.Client.Issues.ListLabels(ctx, "terraform-providers", "terraform-provider-aws", &github.ListOptions{PerPage: 100})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return labels
+}
+
+func (goGithubClient *goGithubClient) GetIssueCountForLabel(ctx context.Context, label string) IssueResult {
+	allIssues := goGithubClient.GetIssuesForLabel(ctx, label)
+
+	issueResult := IssueResult{}
+	for _, issue := range allIssues {
+		if issue.IsPullRequest() {
+			issueResult.PullRequests++
+		} else {
+			issueResult.Issues++
+		}
+		issueResult.Reactions += *issue.Reactions.TotalCount
+		issueResult.PlusOne += *issue.Reactions.PlusOne
+		issueResult.MinusOne += *issue.Reactions.MinusOne
+		issueResult.Laugh += *issue.Reactions.Laugh
+		issueResult.Confused += *issue.Reactions.Confused
+		issueResult.Heart += *issue.Reactions.Heart
+		// These reactions are not supported by go-github as they are not GA
+		issueResult.Rocket += *issue.Reactions.Rocket
+		issueResult.Eyes += *issue.Reactions.Eyes
+		issueResult.Hooray += *issue.Reactions.Hooray
+	}
+
+	return issueResult
+}
+
+func (goGithubClient *goGithubClient) GetIssuesForLabel(ctx context.Context, label string) []*github.Issue {
+	issuesListOptions := &github.IssueListByRepoOptions{
+		State:       "open",
+		Labels:      []string{label},
+		ListOptions: github.ListOptions{PerPage: 100},
+	}
+
+	var allIssues []*github.Issue
+	for {
+		issues, resp, err := goGithubClient.Client.Issues.ListByRepo(ctx, "terraform-providers", "terraform-provider-aws", issuesListOptions)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		allIssues = append(allIssues, issues...)
+		if resp.NextPage == 0 {
+			break
+		}
+		issuesListOptions.Page = resp.NextPage
+	}
+	return allIssues
 }
 
 // GetPullRequestsAndFiles : Gets all Open PRs for the provider, gets the changed files information for each and returns an array of PullRequestFiles

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/breathingdust/tf-aws-ghq/cache"
-	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/breathingdust/tf-aws-ghq/repositories"
 	"github.com/juliangruber/go-intersect"
 )
 
@@ -19,15 +19,16 @@ func (c *SearchForDuplicatePullRequestsCommand) Help() string {
 	return "help"
 }
 
+// Run : Required by mitchellh/cli package, function which executes on cli command invocation
 func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 	ctx := context.Background()
-	client := github.NewGoGithubClient(ctx)
+	client := repositories.NewGoGithubClient(ctx)
 
 	number, _ := strconv.Atoi(args[0])
 
 	fileCache := cache.SimpleFileCache{}
 
-	var allPullRequests []github.PullRequestFiles
+	var allPullRequests []repositories.PullRequestFiles
 
 	fileCache.Read("allPullRequests", &allPullRequests)
 
@@ -38,7 +39,7 @@ func (c *SearchForDuplicatePullRequestsCommand) Run(args []string) int {
 		log.Print("Using cached Pull Requests")
 	}
 
-	var pullRequest github.PullRequestFiles
+	var pullRequest repositories.PullRequestFiles
 
 	for _, r := range allPullRequests {
 		if r.PullRequest.GetNumber() == number {

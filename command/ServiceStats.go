@@ -1,12 +1,12 @@
 package command
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 
-	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/breathingdust/tf-aws-ghq/repositories"
 )
 
 type ServiceStatsCommand struct {
@@ -26,19 +26,20 @@ func (c *ServiceStatsCommand) Run(args []string) int {
 
 	sortBy = strings.ToLower(sortBy)
 
-	githubClient := github.GithubClient{Username: c.Username, Password: c.Password, Client: http.Client{}}
+	ctx := context.Background()
+	goGithubClient := repositories.NewGoGithubClient(ctx)
 
-	labels := githubClient.GetLabels()
+	labels := goGithubClient.GetLabels(ctx)
 
 	type kv struct {
 		Key   string
-		Value github.IssueResult
+		Value repositories.IssueResult
 	}
 	var results []kv
 
 	for _, s := range labels {
-		if strings.HasPrefix(s.Name, "service/") {
-			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
+		if strings.HasPrefix(s.GetName(), "service/") {
+			results = append(results, kv{s.GetName(), goGithubClient.GetIssueCountForLabel(ctx, s.GetName())})
 		}
 	}
 

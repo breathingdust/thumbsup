@@ -1,4 +1,4 @@
-package github
+package repositories
 
 import (
 	"context"
