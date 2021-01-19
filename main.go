@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -12,6 +13,8 @@ import (
 func main() {
 	username := os.Getenv("GITHUB_USER")
 	password := os.Getenv("GITHUB_TOKEN")
+
+	ctx := context.Background()
 
 	c := cli.NewCLI("tf-aws-ghq", "1.0.0")
 	c.Args = os.Args[1:]
@@ -30,6 +33,11 @@ func main() {
 		},
 		"aggregated-issue-reactions": func() (cli.Command, error) {
 			return &command.AggregatedIssueReactionsCommand{}, nil
+		},
+		"issue-pullrequest-reactions": func() (cli.Command, error) {
+			return &command.IssuePullRequestReactionsCommand{
+				Context: ctx,
+			}, nil
 		},
 	}
 	exitStatus, err := c.Run()

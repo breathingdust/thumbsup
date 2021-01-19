@@ -20,13 +20,6 @@ type GraphQLClient struct {
 }
 
 func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIssueReactionResult {
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-
-	client := githubv4.NewClient(httpClient)
-
 	type issue struct {
 		Url       string
 		Title     string
@@ -43,6 +36,12 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 								TotalCount int
 							} `graphql:"reactions(first: 1)"`
 						} `graphql:"... on Issue"`
+						PullRequest struct {
+							State     string
+							Reactions struct {
+								TotalCount int
+							} `graphql:"reactions(first: 1)"`
+						} `graphql:"... on PullRequest"`
 					}
 				} `graphql:"... on CrossReferencedEvent"`
 			}
@@ -60,6 +59,13 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 			} `graphql:"issues(states: [OPEN], first:100, after: $issuesCursor)"`
 		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
 	}
+
+	src := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+	)
+	httpClient := oauth2.NewClient(context.Background(), src)
+
+	client := githubv4.NewClient(httpClient)
 
 	variables := map[string]interface{}{
 		"issuesCursor": (*githubv4.String)(nil), // Null after argument to get first page.
@@ -85,6 +91,10 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 		for _, t := range n.TimelineItems.Nodes {
 			if t.CrossReferencedEvent.Source.Issue.State == "OPEN" {
 				reactionCount += t.CrossReferencedEvent.Source.Issue.Reactions.TotalCount
+			}
+
+			if t.CrossReferencedEvent.Source.Issue.State == "OPEN" {
+				reactionCount += t.CrossReferencedEvent.Source.PullRequest.Reactions.TotalCount
 			}
 		}
 		results = append(results, AggregatedIssueReactionResult{
