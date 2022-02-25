@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/breathingdust/tf-aws-ghq/command"
+	"github.com/breathingdust/thumbsup/command"
 
 	"github.com/mitchellh/cli"
 )
@@ -16,7 +16,7 @@ func main() {
 
 	ctx := context.Background()
 
-	c := cli.NewCLI("tf-aws-ghq", "1.0.0")
+	c := cli.NewCLI("thumbsup", "1.0.0")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"service-stats": func() (cli.Command, error) {

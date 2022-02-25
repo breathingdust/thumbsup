@@ -1,4 +1,4 @@
-module github.com/breathingdust/tf-aws-ghq
+module github.com/breathingdust/thumbsup
 
 go 1.13
 

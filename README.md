@@ -1,4 +1,4 @@
-# tf-aws-ghq
+# thumbsup
 
 Helper command to pull useful Terraform AWS Provider specific data from the Github API.
 

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/breathingdust/thumbsup/github"
 )
 
 type ServiceStatsCommand struct {

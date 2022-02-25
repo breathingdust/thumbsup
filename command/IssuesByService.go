@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/breathingdust/tf-aws-ghq/github"
+	"github.com/breathingdust/thumbsup/github"
 )
 
 type IssuesByServiceCommand struct {
