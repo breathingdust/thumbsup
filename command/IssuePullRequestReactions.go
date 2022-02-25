@@ -18,7 +18,9 @@ func (c *IssuePullRequestReactionsCommand) Help() string {
 func (c *IssuePullRequestReactionsCommand) Run(args []string) int {
 	client := github.IssuePullRequestClient{}
 
-	results := client.GetAggregatedIssuePullRequestReactions()
+	provider := args[0]
+
+	results := client.GetAggregatedIssuePullRequestReactions(provider)
 
 	for _, r := range results {
 		fmt.Printf("%s,%s,%d\n", r.Title, r.Url, r.Reactions)

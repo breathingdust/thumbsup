@@ -17,7 +17,7 @@ import (
 type IssuePullRequestClient struct {
 }
 
-func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequestReactions() []AggregatedIssueReactionResult {
+func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequestReactions(provider string) []AggregatedIssueReactionResult {
 
 	type pullRequest struct {
 		Url       string
@@ -37,7 +37,7 @@ func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequ
 					HasNextPage bool
 				}
 			} `graphql:"pullRequests(states: [OPEN], first:100, after: $pullRequestsCursor)"`
-		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
+		} `graphql:"repository(owner: \"hashicorp\", name: $provider)"`
 	}
 
 	closeKeywords := []string{"close", "closes",
@@ -60,6 +60,7 @@ func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequ
 
 	variables := map[string]interface{}{
 		"pullRequestsCursor": (*githubv4.String)(nil), // Null after argument to get first page.
+		"provider":           githubv4.String(fmt.Sprintf("terraform-provider-%s", provider)),
 	}
 
 	var allPullRequests []pullRequest
@@ -85,7 +86,7 @@ func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequ
 					TotalCount int
 				} `graphql:"reactions(first: 1)"`
 			} `graphql:"issue(number: $number)"`
-		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
+		} `graphql:"repository(owner: \"terraform-providers\", name: $provider)"`
 	}
 
 	for _, n := range allPullRequests {
@@ -106,7 +107,8 @@ func (issuePullRequestClient *IssuePullRequestClient) GetAggregatedIssuePullRequ
 						log.Fatal(err)
 					}
 					variables := map[string]interface{}{
-						"number": githubv4.Int(issueID),
+						"number":   githubv4.Int(issueID),
+						"provider": githubv4.String(fmt.Sprintf("terraform-provider-%s", provider)),
 					}
 
 					err = client.Query(context.Background(), &issueQuery, variables)

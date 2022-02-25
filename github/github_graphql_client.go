@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -19,7 +20,7 @@ type AggregatedIssueReactionResult struct {
 type GraphQLClient struct {
 }
 
-func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIssueReactionResult {
+func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions(provider string) []AggregatedIssueReactionResult {
 	type issue struct {
 		Url       string
 		Title     string
@@ -57,7 +58,7 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 					HasNextPage bool
 				}
 			} `graphql:"issues(states: [OPEN], first:100, after: $issuesCursor)"`
-		} `graphql:"repository(owner: \"terraform-providers\", name: \"terraform-provider-aws\")"`
+		} `graphql:"repository(owner: \"hashicorp\", name: $provider)"`
 	}
 
 	src := oauth2.StaticTokenSource(
@@ -69,6 +70,7 @@ func (graphQLClient *GraphQLClient) GetAggregatedIssueReactions() []AggregatedIs
 
 	variables := map[string]interface{}{
 		"issuesCursor": (*githubv4.String)(nil), // Null after argument to get first page.
+		"provider":     githubv4.String(fmt.Sprintf("terraform-provider-%s", provider)),
 	}
 
 	var allIssues []issue

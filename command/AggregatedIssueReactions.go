@@ -16,7 +16,9 @@ func (c *AggregatedIssueReactionsCommand) Help() string {
 func (c *AggregatedIssueReactionsCommand) Run(args []string) int {
 	client := github.GraphQLClient{}
 
-	results := client.GetAggregatedIssueReactions()
+	provider := args[0]
+
+	results := client.GetAggregatedIssueReactions(provider)
 
 	for _, r := range results {
 		fmt.Printf("%s,%s,%d\n", r.Title, r.Url, r.Reactions)

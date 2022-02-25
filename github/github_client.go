@@ -94,12 +94,13 @@ func (githubClient *GithubClient) getAll(githubUrl string, r *regexp.Regexp) [][
 	return results
 }
 
-func (githubClient *GithubClient) GetLabels() []Label {
+func (githubClient *GithubClient) GetLabels(provider string) []Label {
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/labels\?page=\d+)>; rel=\"next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := "https://api.github.com/repos/terraform-providers/terraform-provider-aws/labels"
+
+	url := fmt.Sprintf("https://api.github.com/repos/hashicorp/terraform-provider-%s/labels", provider)
 
 	labelApiResults := githubClient.getAll(url, r)
 
@@ -117,12 +118,13 @@ func (githubClient *GithubClient) GetLabels() []Label {
 	return results
 }
 
-func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
+func (githubClient *GithubClient) GetIssueCountForLabel(provider string, s string) IssueResult {
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/issues\?labels=service%2F\w+&state=open&page=\d+)>; rel="next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", url.QueryEscape(s))
+
+	url := fmt.Sprintf("https://api.github.com/repos/hashicorp/terraform-provider-%s/issues?labels=%s&state=open", provider, url.QueryEscape(s))
 
 	apiResults := githubClient.getAll(url, r)
 
@@ -155,12 +157,12 @@ func (githubClient *GithubClient) GetIssueCountForLabel(s string) IssueResult {
 	return issueResult
 }
 
-func (githubClient *GithubClient) GetIssuesForLabel(s string) []Issue {
+func (githubClient *GithubClient) GetIssuesForLabel(provider string, s string) []Issue {
 	r, err := regexp.Compile(`<(?P<url>https:\/\/api\.github\.com\/repositories\/\d+\/issues\?labels=service%2F\w+&state=open&page=\d+)>; rel="next"`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	url := fmt.Sprintf("https://api.github.com/repos/terraform-providers/terraform-provider-aws/issues?labels=%s&state=open", url.QueryEscape(s))
+	url := fmt.Sprintf("https://api.github.com/repos/hashicorp/terraform-provider-%s/issues?labels=%s&state=open", provider, url.QueryEscape(s))
 
 	apiResults := githubClient.getAll(url, r)
 

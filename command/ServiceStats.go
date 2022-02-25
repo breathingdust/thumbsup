@@ -19,16 +19,14 @@ func (c *ServiceStatsCommand) Help() string {
 }
 
 func (c *ServiceStatsCommand) Run(args []string) int {
-	sortBy := ""
-	if len(args) > 0 {
-		sortBy = args[0]
-	}
+	provider := args[0]
+	sortBy := args[1]
 
 	sortBy = strings.ToLower(sortBy)
 
 	githubClient := github.GithubClient{Username: c.Username, Password: c.Password, Client: http.Client{}}
 
-	labels := githubClient.GetLabels()
+	labels := githubClient.GetLabels(provider)
 
 	type kv struct {
 		Key   string
@@ -38,7 +36,7 @@ func (c *ServiceStatsCommand) Run(args []string) int {
 
 	for _, s := range labels {
 		if strings.HasPrefix(s.Name, "service/") {
-			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(s.Name)})
+			results = append(results, kv{s.Name, githubClient.GetIssueCountForLabel(provider, s.Name)})
 		}
 	}
 

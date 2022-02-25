@@ -19,10 +19,8 @@ func (c *CoreServiceReactionsCommand) Help() string {
 }
 
 func (c *CoreServiceReactionsCommand) Run(args []string) int {
-	sortBy := ""
-	if len(args) > 0 {
-		sortBy = args[0]
-	}
+	provider := args[0]
+	sortBy := args[1]
 
 	sortBy = strings.ToLower(sortBy)
 
@@ -33,7 +31,7 @@ func (c *CoreServiceReactionsCommand) Run(args []string) int {
 	var results []github.Issue
 
 	for _, s := range coreServices {
-		results = append(results, githubClient.GetIssuesForLabel(s)...)
+		results = append(results, githubClient.GetIssuesForLabel(provider, s)...)
 	}
 
 	sort.Slice(results, func(i, j int) bool {
