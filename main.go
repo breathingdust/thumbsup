@@ -39,6 +39,11 @@ func main() {
 				Context: ctx,
 			}, nil
 		},
+		"issues-by-service": func() (cli.Command, error) {
+			return &command.IssuesByServiceCommand{
+				Context: ctx,
+			}, nil
+		},
 	}
 	exitStatus, err := c.Run()
 	if err != nil {

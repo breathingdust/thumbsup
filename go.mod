@@ -2,9 +2,10 @@ module github.com/breathingdust/tf-aws-ghq
 
 go 1.13
 
+replace github.com/google/go-github/v33 => /Users/sdavis/development/go-github
+
 require (
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v33 v33.0.0
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/cli v1.1.1
