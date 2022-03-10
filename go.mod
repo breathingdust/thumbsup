@@ -2,8 +2,6 @@ module github.com/breathingdust/thumbsup
 
 go 1.13
 
-replace github.com/google/go-github/v33 => /Users/sdavis/development/go-github
-
 require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/go-github/v33 v33.0.0
